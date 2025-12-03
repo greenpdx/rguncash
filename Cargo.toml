@@ -3,7 +3,7 @@ members = [".", "app"]
 resolver = "3"
 
 [package]
-name = "gnucash-sys"
+name = "rgnucash"
 version = "0.1.2"
 edition = "2024"
 license = "MIT"
