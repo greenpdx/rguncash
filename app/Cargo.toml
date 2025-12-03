@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 description = "Extended functionality for gnucash-sys (business entities, queries, builders)"
+keywords = ["gnucash", "accounting", "finance", "invoice", "business"]
+categories = ["finance"]
+repository = "https://github.com/user/gnucash-sys"
+readme = "README.md"
 
 [lib]
 path = "src/lib.rs"
@@ -17,3 +21,7 @@ gnucash-sys = { path = ".." }
 
 [build-dependencies]
 dotenvy = "0.15"
+
+[[example]]
+name = "simple_business"
+path = "examples/simple_business.rs"

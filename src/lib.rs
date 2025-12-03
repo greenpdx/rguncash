@@ -127,9 +127,6 @@ pub mod session;
 /// Safe wrappers for Price and PriceDB.
 pub mod price;
 
-/// Safe wrappers for business entities (Customer, Vendor, Invoice, etc.).
-pub mod business;
-
 // Re-export main types at crate root
 pub use account::{Account, GNCAccountType};
 pub use book::Book;
@@ -148,10 +145,3 @@ pub use transaction::txn_type;
 
 // Re-export price types
 pub use price::{Price, PriceDB, PriceSource};
-
-// Re-export business module
-pub use business::{
-    Address, BillTerm, Customer, Employee, Entry, GncAmountType, GncBillTermType, GncDiscountHow,
-    GncEntryPaymentType, GncInvoiceType, GncTaxIncluded, Invoice, Job, Owner, OwnerType, TaxTable,
-    TaxTableEntry, Vendor,
-};
