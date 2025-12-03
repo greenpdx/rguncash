@@ -47,7 +47,7 @@ impl Account {
     /// Returns the GUID of this account.
     pub fn guid(&self) -> Guid {
         unsafe {
-            let instance = self.ptr.as_ptr() as *const ffi::QofInstance;
+            let instance = self.ptr.as_ptr() as *const std::ffi::c_void;
             let guid_ptr = ffi::qof_instance_get_guid(instance);
             if guid_ptr.is_null() {
                 Guid::from_bytes([0; 16])
@@ -259,8 +259,15 @@ impl Account {
     }
 
     /// Appends a child account to this account.
+    /// Note: After appending, the parent/book takes ownership of the child.
     pub fn append_child(&self, child: &Account) {
         unsafe { ffi::gnc_account_append_child(self.ptr.as_ptr(), child.ptr.as_ptr()) }
+    }
+
+    /// Marks this account as not owned by this wrapper.
+    /// Call this after adding the account to a book/hierarchy.
+    pub fn mark_unowned(&mut self) {
+        self.owned = false;
     }
 
     /// Removes a child account from this account.

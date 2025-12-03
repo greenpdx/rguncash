@@ -19,6 +19,10 @@ pub enum Error {
     StringConversion(String),
     /// A numeric error occurred (e.g., division by zero).
     Numeric(String),
+    /// An invalid operation was attempted.
+    InvalidOperation(String),
+    /// A session error occurred.
+    Session(String),
     /// Generic error with a message.
     Other(String),
 }
@@ -33,6 +37,8 @@ impl fmt::Display for Error {
             Error::InvalidAccountType(t) => write!(f, "invalid account type: {}", t),
             Error::StringConversion(s) => write!(f, "string conversion error: {}", s),
             Error::Numeric(s) => write!(f, "numeric error: {}", s),
+            Error::InvalidOperation(s) => write!(f, "invalid operation: {}", s),
+            Error::Session(s) => write!(f, "session error: {}", s),
             Error::Other(s) => write!(f, "{}", s),
         }
     }

@@ -1,9 +1,11 @@
 //! Safe Rust wrappers for GnuCash core types.
 
-use std::ffi::CStr;
 use std::fmt;
 
 use crate::ffi;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// GUID encoding length (32 hex characters).
 pub const GUID_ENCODING_LENGTH: usize = 32;
@@ -40,6 +42,11 @@ impl Guid {
     /// Checks if this is the null GUID.
     pub fn is_null(&self) -> bool {
         self.0.reserved == [0u8; 16]
+    }
+
+    /// Returns a reference to the inner GncGUID.
+    pub fn as_ffi(&self) -> &ffi::GncGUID {
+        &self.0
     }
 
     /// Parses a GUID from a 32-character hex string.
@@ -204,5 +211,60 @@ impl std::ops::Neg for Numeric {
     type Output = Self;
     fn neg(self) -> Self::Output {
         Numeric::neg(&self)
+    }
+}
+
+// ==================== Serde Support ====================
+
+#[cfg(feature = "serde")]
+mod serde_impl {
+    use super::*;
+    use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
+
+    impl Serialize for Guid {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            serializer.serialize_str(&self.to_string())
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Guid {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            let s = String::deserialize(deserializer)?;
+            Guid::parse(&s).ok_or_else(|| de::Error::custom("invalid GUID format"))
+        }
+    }
+
+    impl Serialize for Numeric {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            use serde::ser::SerializeStruct;
+            let mut state = serializer.serialize_struct("Numeric", 2)?;
+            state.serialize_field("num", &self.num())?;
+            state.serialize_field("denom", &self.denom())?;
+            state.end()
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Numeric {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            #[derive(Deserialize)]
+            struct NumericData {
+                num: i64,
+                denom: i64,
+            }
+            let data = NumericData::deserialize(deserializer)?;
+            Ok(Numeric::new(data.num, data.denom))
+        }
     }
 }

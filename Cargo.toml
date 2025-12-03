@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "app"]
+resolver = "3"
+
 [package]
 name = "gnucash-sys"
 version = "0.1.0"
@@ -6,8 +10,14 @@ license = "GPL-2.0-or-later"
 description = "FFI bindings to libgnucash engine"
 links = "gnucash"
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [dependencies]
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [build-dependencies]
-bindgen = "0.70"
+bindgen = "0.72"
 pkg-config = "0.3"
+dotenvy = "0.15"

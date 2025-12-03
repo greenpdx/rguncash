@@ -110,6 +110,9 @@ pub mod transaction;
 /// Safe wrapper for Split.
 pub mod split;
 
+/// Safe wrapper for QofSession.
+pub mod session;
+
 // Re-export main types at crate root
 pub use account::{Account, GNCAccountType};
 pub use book::Book;
@@ -118,6 +121,9 @@ pub use iter::{AccountChildren, AccountDescendants, AccountSplits, TransactionSp
 pub use split::Split;
 pub use transaction::Transaction;
 pub use types::{Guid, Numeric, GUID_ENCODING_LENGTH};
+
+// Re-export session types
+pub use session::{init_engine, is_engine_initialized, QofBackendError, Session, SessionOpenMode};
 
 // Re-export reconcile and txn_type constants
 pub use split::reconcile;

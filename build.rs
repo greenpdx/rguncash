@@ -2,23 +2,25 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
+    // Load .env file if present
+    let _ = dotenvy::dotenv();
+
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=.env");
 
-    // GnuCash source directory (adjust as needed)
-    let gnucash_src = PathBuf::from(
-        env::var("GNUCASH_SRC").unwrap_or_else(|_| "../gnucash".to_string()),
+    // Get paths from environment or use defaults
+    let lib_path = PathBuf::from(
+        env::var("GNUCASH_LIB_PATH")
+            .unwrap_or_else(|_| "/usr/lib/aarch64-linux-gnu/gnucash".to_string()),
+    );
+    let include_path = PathBuf::from(
+        env::var("GNUCASH_INCLUDE_PATH")
+            .unwrap_or_else(|_| "/usr/include/gnucash".to_string()),
     );
 
-    // GnuCash build directory (for generated headers and libraries)
-    let gnucash_build = PathBuf::from(
-        env::var("GNUCASH_BUILD").unwrap_or_else(|_| "../gnucash/build".to_string()),
-    );
-
-    // Header include paths
-    let engine_include = gnucash_src.join("libgnucash/engine");
-    let core_utils_include = gnucash_src.join("libgnucash/core-utils");
-    let qof_include = gnucash_src.join("libgnucash/engine");
+    println!("cargo:warning=GnuCash lib: {}", lib_path.display());
+    println!("cargo:warning=GnuCash include: {}", include_path.display());
 
     // Get glib-2.0 flags via pkg-config
     let glib = pkg_config::Config::new()
@@ -27,19 +29,20 @@ fn main() {
         .expect("glib-2.0 not found via pkg-config");
 
     // Library search path
-    let lib_path = gnucash_build.join("lib");
     println!("cargo:rustc-link-search=native={}", lib_path.display());
+
+    // Add rpath so the library can be found at runtime
+    println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_path.display());
 
     // Link against gnucash engine library
     println!("cargo:rustc-link-lib=gnc-engine");
 
     // Build bindgen bindings
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let mut builder = bindgen::Builder::default()
         .header("wrapper.h")
-        .clang_arg(format!("-I{}", engine_include.display()))
-        .clang_arg(format!("-I{}", core_utils_include.display()))
-        .clang_arg(format!("-I{}", qof_include.display()))
-        .clang_arg(format!("-I{}", gnucash_build.join("common").display()))
+        .clang_arg(format!("-I{}", include_path.display()))
+        .clang_arg(format!("-I{}", manifest_dir.display()))
         // Core types
         .allowlist_type("GncGUID")
         .allowlist_type("_gncGuid")
@@ -64,6 +67,11 @@ fn main() {
         .allowlist_type("SplitList")
         .allowlist_type("MonetaryList")
         .allowlist_type("GNCLot")
+        // Session types
+        .allowlist_type("QofSession")
+        .allowlist_type("QofSessionImpl")
+        .allowlist_type("SessionOpenMode")
+        .allowlist_type("QofBackendError")
         // GUID functions
         .allowlist_function("guid_.*")
         .allowlist_function("string_to_guid")
@@ -84,23 +92,95 @@ fn main() {
         .allowlist_function("xacc.*")
         .allowlist_function("gnc_.*")
         .allowlist_function("qof_.*")
-        // Block problematic types from glib
-        .blocklist_type("_?GList")
-        .blocklist_type("_?GSList")
-        .blocklist_type("_?GHashTable")
-        .blocklist_type("_?GValue")
-        .blocklist_type("_?GDate")
+        // Price types and functions
+        .allowlist_type("GNCPrice")
+        .allowlist_type("GNCPriceDB")
+        .allowlist_type("PriceSource")
+        .allowlist_function("gnc_price_.*")
+        .allowlist_function("gnc_pricedb_.*")
+        .rustified_enum("PriceSource")
+        // Query types and functions
+        .allowlist_type("QofQuery")
+        .allowlist_type("QofQueryOp")
+        .allowlist_type("QofQueryCompare")
+        .allowlist_type("QofStringMatch")
+        .allowlist_type("QofDateMatch")
+        .allowlist_type("QofNumericMatch")
+        .allowlist_type("QofGuidMatch")
+        .allowlist_type("QofCharMatch")
+        .rustified_enum("QofQueryOp")
+        .rustified_enum("QofQueryCompare")
+        .rustified_enum("QofStringMatch")
+        .rustified_enum("QofDateMatch")
+        .rustified_enum("QofNumericMatch")
+        .rustified_enum("QofGuidMatch")
+        .rustified_enum("QofCharMatch")
+        // Business types
+        .allowlist_type("GncAddress")
+        .allowlist_type("GncCustomer")
+        .allowlist_type("GncVendor")
+        .allowlist_type("GncEmployee")
+        .allowlist_type("GncJob")
+        .allowlist_type("GncInvoice")
+        .allowlist_type("GncEntry")
+        .allowlist_type("GncBillTerm")
+        .allowlist_type("GncTaxTable")
+        .allowlist_type("GncTaxTableEntry")
+        .allowlist_type("GncOwner")
+        .allowlist_type("GncOwnerType")
+        .allowlist_type("GncInvoiceType")
+        .allowlist_type("GncEntryPaymentType")
+        .allowlist_type("GncDiscountHow")
+        .allowlist_type("GncAmountType")
+        .allowlist_type("GncBillTermType")
+        // Business functions
+        .allowlist_function("gncAddress.*")
+        .allowlist_function("gncCustomer.*")
+        .allowlist_function("gncVendor.*")
+        .allowlist_function("gncEmployee.*")
+        .allowlist_function("gncJob.*")
+        .allowlist_function("gncInvoice.*")
+        .allowlist_function("gncEntry.*")
+        .allowlist_function("gncBillTerm.*")
+        .allowlist_function("gncTaxTable.*")
+        .allowlist_function("gncOwner.*")
+        // Business enums
+        .rustified_enum("GncOwnerType")
+        .rustified_enum("GncInvoiceType")
+        .rustified_enum("GncEntryPaymentType")
+        .rustified_enum("GncDiscountHow")
+        .rustified_enum("GncAmountType")
+        .rustified_enum("GncBillTermType")
+        // GLib types we need
+        .allowlist_type("GList")
+        .allowlist_type("_GList")
+        .allowlist_type("GDate")
+        .allowlist_type("_GDate")
+        .allowlist_type("GValue")
+        .allowlist_type("_GValue")
+        .allowlist_type("GHashTable")
+        .allowlist_type("_GHashTable")
+        .allowlist_function("g_free")
+        .allowlist_function("g_list_.*")
+        .allowlist_function("g_slist_.*")
+        .allowlist_function("g_date_.*")
+        .allowlist_type("GSList")
+        .allowlist_type("_GSList")
         // Generate Rust enums for C enums
         .rustified_enum("GNCAccountType")
         .rustified_enum("GNCNumericErrorCode")
         .rustified_enum("GNCPlaceholderType")
         .rustified_enum("QofDateFormat")
         .rustified_enum("QofDateCompletion")
+        .rustified_enum("SessionOpenMode")
+        .rustified_enum("QofBackendError")
         // Derive common traits
         .derive_debug(true)
         .derive_default(true)
         .derive_eq(true)
-        .derive_hash(true);
+        .derive_hash(true)
+        // Rust 2024 compatibility
+        .wrap_unsafe_ops(true);
 
     // Add glib include paths
     for path in &glib.include_paths {

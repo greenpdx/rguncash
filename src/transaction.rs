@@ -52,7 +52,7 @@ impl Transaction {
     /// Returns the GUID of this transaction.
     pub fn guid(&self) -> Guid {
         unsafe {
-            let instance = self.ptr.as_ptr() as *const ffi::QofInstance;
+            let instance = self.ptr.as_ptr() as *const std::ffi::c_void;
             let guid_ptr = ffi::qof_instance_get_guid(instance);
             if guid_ptr.is_null() {
                 Guid::from_bytes([0; 16])
@@ -207,7 +207,7 @@ impl Transaction {
 
     /// Sets the transaction type.
     pub fn set_txn_type(&self, txn_type: char) {
-        unsafe { ffi::xaccTransSetTxnType(self.ptr.as_ptr(), txn_type as i8) }
+        unsafe { ffi::xaccTransSetTxnType(self.ptr.as_ptr(), txn_type as u8) }
     }
 
     /// Sets whether this is a closing transaction.

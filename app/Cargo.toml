@@ -1,0 +1,16 @@
+[package]
+name = "gnucash-ext"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-2.0-or-later"
+description = "Extended functionality for gnucash-sys (business entities, queries, builders)"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "gnucash-app"
+path = "src/bin/main.rs"
+
+[dependencies]
+gnucash-sys = { path = ".." }

@@ -3,7 +3,7 @@
 use std::ptr::NonNull;
 
 use crate::ffi;
-use crate::Guid;
+use crate::{Account, Guid};
 
 /// A GnuCash Book - the top-level container for all financial data.
 ///
@@ -45,7 +45,7 @@ impl Book {
     /// Returns the GUID of this book.
     pub fn guid(&self) -> Guid {
         unsafe {
-            let instance = self.ptr.as_ptr() as *const ffi::QofInstance;
+            let instance = self.ptr.as_ptr() as *const std::ffi::c_void;
             let guid_ptr = ffi::qof_instance_get_guid(instance);
             if guid_ptr.is_null() {
                 Guid::from_bytes([0; 16])
@@ -119,6 +119,16 @@ impl Book {
     /// Returns the root account for this book, if any.
     pub fn root_account_ptr(&self) -> *mut ffi::Account {
         unsafe { ffi::gnc_book_get_root_account(self.ptr.as_ptr()) }
+    }
+
+    /// Returns the root account for this book.
+    pub fn root_account(&self) -> Option<Account> {
+        unsafe { Account::from_raw(self.root_account_ptr(), false) }
+    }
+
+    /// Sets the root account for this book.
+    pub fn set_root_account(&self, root: &Account) {
+        unsafe { ffi::gnc_book_set_root_account(self.ptr.as_ptr(), root.as_ptr()) }
     }
 
     /// Returns the number of transactions in this book.

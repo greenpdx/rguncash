@@ -58,7 +58,7 @@ impl Split {
     /// Returns the GUID of this split.
     pub fn guid(&self) -> Guid {
         unsafe {
-            let instance = self.ptr.as_ptr() as *const ffi::QofInstance;
+            let instance = self.ptr.as_ptr() as *const std::ffi::c_void;
             let guid_ptr = ffi::qof_instance_get_guid(instance);
             if guid_ptr.is_null() {
                 Guid::from_bytes([0; 16])
@@ -229,7 +229,7 @@ impl Split {
 
     /// Sets the reconcile state.
     pub fn set_reconcile_state(&self, state: char) {
-        unsafe { ffi::xaccSplitSetReconcile(self.ptr.as_ptr(), state as i8) }
+        unsafe { ffi::xaccSplitSetReconcile(self.ptr.as_ptr(), state as u8) }
     }
 
     /// Returns the date when this split was reconciled.
