@@ -1,0 +1,27 @@
+Source: rgnucash
+Section: finance
+Priority: optional
+Maintainer: Shaun Savage <savages@crmep.com>
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc (>= 1.85),
+               pkg-config,
+               libc6-dev,
+               gnucash,
+               clang,
+               llvm
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: rgnucash
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         gnucash
+Description: FFI bindings and tools for GnuCash
+ rgnucash provides Rust FFI bindings to the libgnucash engine,
+ along with extended functionality for business entities, queries,
+ and builders.
+ .
+ Includes:
+  * gnucash-app - Command line tool for GnuCash operations
+  * librgnucash - Rust bindings to libgnucash

@@ -1,0 +1,11 @@
+rgnucash (0.1.3) unstable; urgency=medium
+
+  * .gitignore,app/Cargo.toml,debian/changelog,debian/control,debian/copyright
+
+ -- Shaun Savage <savages@crmep.com>  Thu, 11 Dec 2025 19:06:42 +0000
+
+rgnucash (0.1.2) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Shaun Savage <savages@crmep.com>  Wed, 11 Dec 2025 10:00:00 +0000

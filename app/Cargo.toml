@@ -20,7 +20,7 @@ name = "gnucash-app"
 path = "src/bin/main.rs"
 
 [dependencies]
-rgnucash = { path = ".." }
+gnucash_sys = { path = "..", package = "rgnucash" }
 
 [build-dependencies]
 dotenvy = "0.15"
